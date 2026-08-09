@@ -10,6 +10,9 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\AdminController;
 
 // Public Routes
+Route::get('/welcome', function () {
+    return view('welcome');
+})->name('welcome');
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/pelajari-sistem', [LandingController::class, 'learnSystem'])->name('learn-system');
 Route::get('/peta', [LandingController::class, 'fullMap'])->name('peta');

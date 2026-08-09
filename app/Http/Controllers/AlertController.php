@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alert;
 use App\Http\Traits\ApiResponseTrait;
+use App\Repositories\Contracts\AlertRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,25 +12,20 @@ class AlertController extends Controller
 {
     use ApiResponseTrait;
 
+    protected AlertRepositoryInterface $alertRepository;
+
+    public function __construct(AlertRepositoryInterface $alertRepository)
+    {
+        $this->alertRepository = $alertRepository;
+    }
+
     public function index(Request $request)
     {
-        $query = Alert::where('user_id', Auth::id())
-            ->with(['bencana', 'lokasi'])
-            ->orderBy('created_at', 'desc');
-
-        // Filter by disaster type
-        if ($request->filled('jenis')) {
-            $query->whereHas('bencana', function ($q) use ($request) {
-                $q->where('jenis_bencana', $request->jenis);
-            });
-        }
-
-        // Filter by date
-        if ($request->filled('tanggal')) {
-            $query->whereDate('created_at', $request->tanggal);
-        }
-
-        $alerts = $query->paginate(15);
+        $alerts = $this->alertRepository->getForUserPaginated(
+            Auth::id(),
+            $request->only(['jenis', 'tanggal']),
+            15
+        );
 
         if ($this->wantsJson($request)) {
             return response()->json([
@@ -49,31 +45,23 @@ class AlertController extends Controller
 
     public function markAsRead(Request $request, $id)
     {
-        $alert = Alert::findOrFail($id);
+        $alert = $this->alertRepository->find($id);
 
-        if ($alert->user_id !== Auth::id()) {
+        if (!$alert || $alert->user_id !== Auth::id()) {
             if ($this->wantsJson($request)) {
                 return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
             }
             abort(403);
         }
 
-        $alert->update([
-            'status' => 'read',
-            'read_at' => now(),
-        ]);
+        $updatedAlert = $this->alertRepository->markAsRead($id, Auth::id());
 
-        return $this->respondWithSuccessOrBack($request, 'Alert ditandai telah dibaca.', ['alert' => $alert->fresh()]);
+        return $this->respondWithSuccessOrBack($request, 'Alert ditandai telah dibaca.', ['alert' => $updatedAlert]);
     }
 
     public function markAllRead(Request $request)
     {
-        $count = Alert::where('user_id', Auth::id())
-            ->where('status', 'sent')
-            ->update([
-                'status' => 'read',
-                'read_at' => now(),
-            ]);
+        $count = $this->alertRepository->markAllAsReadForUser(Auth::id());
 
         return $this->respondWithSuccessOrBack($request, "Semua alert ditandai telah dibaca. ({$count} alert)");
     }
@@ -83,12 +71,7 @@ class AlertController extends Controller
      */
     public function latestAlerts()
     {
-        $alerts = Alert::where('user_id', Auth::id())
-            ->where('status', 'sent')
-            ->with(['bencana', 'lokasi'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
+        $alerts = $this->alertRepository->getUnreadForUser(Auth::id(), 5)
             ->map(fn($a) => [
                 'id' => $a->id,
                 'jenis' => $a->bencana->jenis_bencana ?? 'unknown',

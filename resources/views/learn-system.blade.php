@@ -80,7 +80,7 @@
             </div>
 
             <!-- BNPB -->
-            <div class="bg-surface border border-outline-variant p-6 rounded-xl shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow group">
+            {{-- <div class="bg-surface border border-outline-variant p-6 rounded-xl shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow group">
                 <div class="bg-surface-container-highest p-3 rounded-lg text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
                     <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
                 </div>
@@ -88,7 +88,7 @@
                     <h4 class="text-lg font-display font-bold text-on-surface mb-1">BNPB</h4>
                     <p class="text-sm text-on-surface-variant font-sans">Informasi status siaga bencana nasional dan laporan kerusakan wilayah.</p>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- OpenWeatherMap -->
             <div class="bg-surface border border-outline-variant p-6 rounded-xl shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow group">

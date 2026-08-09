@@ -18,7 +18,7 @@
                 Siaga <span class="text-primary">Sebelum</span> Bencana
             </h1>
             <p class="text-lg text-on-surface-variant max-w-xl font-sans">
-                Dapatkan notifikasi real-time dari BMKG & BNPB langsung di perangkat Anda. Pantau potensi ancaman dan pastikan keselamatan keluarga dengan informasi yang akurat dan cepat.
+                Dapatkan notifikasi real-time dari BMKG langsung di perangkat Anda. Pantau potensi ancaman dan pastikan keselamatan keluarga dengan informasi yang akurat dan cepat.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 mt-4">
                 <a href="{{ route('register') }}" class="bg-primary text-on-primary font-sans font-bold text-lg px-8 py-4 rounded-lg shadow-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center gap-2">

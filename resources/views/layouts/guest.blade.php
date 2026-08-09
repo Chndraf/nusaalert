@@ -38,7 +38,7 @@
                 Sistem pemantauan dan peringatan dini bencana terpadu untuk wilayah Republik Indonesia.
             </p>
             <p class="text-base text-on-surface-variant mt-auto">
-                © {{ date('Y') }} NusaAlert. Data real-time bersumber dari BMKG & BNPB.
+                © {{ date('Y') }} NusaAlert. Data real-time bersumber dari BMKG.
             </p>
         </div>
         {{-- <div class="grid grid-cols-2 gap-4 md:justify-end">

@@ -115,9 +115,16 @@ class BmkgService
      */
     public static function parseDateTime(string $tanggal, string $jam): \Carbon\Carbon
     {
-        // Format: "2024-05-14" and "10:45:30 WIB"
+        // Translate bulan dari Indonesia ke Inggris
+        $bulanIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $bulanEng = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        $tanggalClean = str_replace($bulanIndo, $bulanEng, $tanggal);
+
+        // Bersihkan zona waktu dari string jam
         $jamClean = preg_replace('/\s*(WIB|WITA|WIT)\s*$/i', '', $jam);
-        return \Carbon\Carbon::parse($tanggal . ' ' . $jamClean, 'Asia/Jakarta');
+        
+        return \Carbon\Carbon::parse($tanggalClean . ' ' . $jamClean, 'Asia/Jakarta');
     }
 
     /**

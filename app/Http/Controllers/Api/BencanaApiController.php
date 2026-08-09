@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bencana;
+use App\Repositories\Contracts\BencanaRepositoryInterface;
 use App\Services\BmkgService;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,13 @@ use Illuminate\Http\Request;
  */
 class BencanaApiController extends Controller
 {
+    protected BencanaRepositoryInterface $bencanaRepository;
+
+    public function __construct(BencanaRepositoryInterface $bencanaRepository)
+    {
+        $this->bencanaRepository = $bencanaRepository;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/bencana",
@@ -45,25 +53,8 @@ class BencanaApiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Bencana::orderBy('terjadi_pada', 'desc');
-
-        if ($request->filled('jenis')) {
-            $query->where('jenis_bencana', $request->jenis);
-        }
-
-        if ($request->filled('days')) {
-            $query->where('terjadi_pada', '>=', now()->subDays((int)$request->days));
-        }
-
-        if ($request->filled('sumber')) {
-            $query->where('sumber_api', $request->sumber);
-        }
-
-        if ($request->filled('min_magnitude')) {
-            $query->where('magnitude', '>=', (float) $request->min_magnitude);
-        }
-
-        $data = $query->paginate($request->integer('per_page', 20));
+        $filters = $request->only(['jenis', 'days', 'sumber', 'min_magnitude']);
+        $data = $this->bencanaRepository->getPaginated($filters, $request->integer('per_page', 20));
 
         return response()->json([
             'status' => 'success',
@@ -162,9 +153,7 @@ class BencanaApiController extends Controller
     {
         $days = $request->integer('days', 30);
 
-        $bencana = Bencana::where('terjadi_pada', '>=', now()->subDays($days))
-            ->orderBy('terjadi_pada', 'desc')
-            ->get()
+        $bencana = $this->bencanaRepository->getActiveInDays($days)
             ->map(fn($b) => [
                 'id' => $b->id,
                 'event_id' => $b->event_id,
@@ -223,16 +212,7 @@ class BencanaApiController extends Controller
         $radius = (float) ($request->radius ?? 100); // Default 100 km
         $days = (int) ($request->days ?? 30);
 
-        $bencana = Bencana::where('terjadi_pada', '>=', now()->subDays($days))
-            ->orderBy('terjadi_pada', 'desc')
-            ->get()
-            ->filter(function ($b) use ($lat, $lng, $radius) {
-                $distance = BmkgService::haversineDistance($lat, $lng, (float) $b->latitude, (float) $b->longitude);
-                $b->distance_km = $distance;
-                return $distance <= $radius;
-            })
-            ->sortBy('distance_km')
-            ->values()
+        $bencana = $this->bencanaRepository->getNearby($lat, $lng, $radius, $days)
             ->map(fn($b) => [
                 'id' => $b->id,
                 'jenis' => $b->jenis_bencana,

@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 
 use App\Http\Controllers\Controller;
 use App\Models\Alert;
+use App\Repositories\Contracts\AlertRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\Auth;
  */
 class AlertApiController extends Controller
 {
+    protected AlertRepositoryInterface $alertRepository;
+
+    public function __construct(AlertRepositoryInterface $alertRepository)
+    {
+        $this->alertRepository = $alertRepository;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/alerts",
@@ -41,25 +49,11 @@ class AlertApiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Alert::where('user_id', Auth::id())
-            ->with(['bencana', 'lokasi'])
-            ->orderBy('created_at', 'desc');
-
-        if ($request->filled('jenis')) {
-            $query->whereHas('bencana', function ($q) use ($request) {
-                $q->where('jenis_bencana', $request->jenis);
-            });
-        }
-
-        if ($request->filled('tanggal')) {
-            $query->whereDate('created_at', $request->tanggal);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $alerts = $query->paginate($request->integer('per_page', 15));
+        $alerts = $this->alertRepository->getForUserPaginated(
+            Auth::id(),
+            $request->only(['jenis', 'tanggal', 'status']),
+            $request->integer('per_page', 15)
+        );
 
         return response()->json([
             'status' => 'success',
@@ -84,12 +78,7 @@ class AlertApiController extends Controller
      */
     public function unread()
     {
-        $alerts = Alert::where('user_id', Auth::id())
-            ->where('status', 'sent')
-            ->with(['bencana', 'lokasi'])
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
+        $alerts = $this->alertRepository->getUnreadForUser(Auth::id(), 10)
             ->map(fn($a) => [
                 'id' => $a->id,
                 'jenis' => $a->bencana->jenis_bencana ?? 'unknown',
@@ -103,7 +92,7 @@ class AlertApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $alerts,
-            'unread_count' => Alert::where('user_id', Auth::id())->where('status', 'sent')->count(),
+            'unread_count' => $this->alertRepository->getUnreadCountForUser(Auth::id()),
         ]);
     }
 
@@ -127,15 +116,12 @@ class AlertApiController extends Controller
             ], 403);
         }
 
-        $alert->update([
-            'status' => 'read',
-            'read_at' => now(),
-        ]);
+        $updatedAlert = $this->alertRepository->markAsRead($alert->id, Auth::id());
 
         return response()->json([
             'status' => 'success',
             'message' => 'Alert ditandai telah dibaca.',
-            'data' => $alert->fresh(),
+            'data' => $updatedAlert,
         ]);
     }
 
@@ -150,12 +136,7 @@ class AlertApiController extends Controller
      */
     public function markAllRead()
     {
-        $count = Alert::where('user_id', Auth::id())
-            ->where('status', 'sent')
-            ->update([
-                'status' => 'read',
-                'read_at' => now(),
-            ]);
+        $count = $this->alertRepository->markAllAsReadForUser(Auth::id());
 
         return response()->json([
             'status' => 'success',

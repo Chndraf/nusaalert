@@ -4,21 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Lokasi;
 use App\Http\Traits\ApiResponseTrait;
+use App\Repositories\Contracts\LokasiRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-
 
 class LokasiController extends Controller
 {
     use ApiResponseTrait;
 
+    protected LokasiRepositoryInterface $lokasiRepository;
+
+    public function __construct(LokasiRepositoryInterface $lokasiRepository)
+    {
+        $this->lokasiRepository = $lokasiRepository;
+    }
+
     public function index(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        
-        $lokasi = $user->lokasi()->orderBy('created_at', 'desc')->get();
+        $lokasi = $this->lokasiRepository->getForUser(Auth::id());
 
         if ($this->wantsJson($request)) {
             return response()->json([
@@ -39,10 +43,7 @@ class LokasiController extends Controller
             'radius_km' => 'required|integer|min:1|max:500',
         ]);
 
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        
-        $lokasi = $user->lokasi()->create($request->only([
+        $lokasi = $this->lokasiRepository->createForUser(Auth::id(), $request->only([
             'nama_lokasi', 'latitude', 'longitude', 'radius_km'
         ]));
 
@@ -61,7 +62,7 @@ class LokasiController extends Controller
             'is_active' => 'sometimes|boolean',
         ]);
 
-        $lokasi->update($request->only([
+        $this->lokasiRepository->update($lokasi->id, $request->only([
             'nama_lokasi', 'latitude', 'longitude', 'radius_km', 'is_active'
         ]));
 
@@ -71,15 +72,17 @@ class LokasiController extends Controller
     public function toggleActive(Request $request, Lokasi $lokasi)
     {
         abort_unless(Auth::id() === $lokasi->user_id, 403, 'Unauthorized');
-        $lokasi->update(['is_active' => !$lokasi->is_active]);
+        
+        $updated = $this->lokasiRepository->toggleActive($lokasi->id);
 
-        return $this->respondWithSuccessOrRedirect($request, 'lokasi.index', 'Status lokasi diperbarui!', ['lokasi' => $lokasi->fresh()]);
+        return $this->respondWithSuccessOrRedirect($request, 'lokasi.index', 'Status lokasi diperbarui!', ['lokasi' => $updated]);
     }
 
     public function destroy(Request $request, Lokasi $lokasi)
     {
         abort_unless(Auth::id() === $lokasi->user_id, 403, 'Unauthorized');
-        $lokasi->delete();
+        
+        $this->lokasiRepository->delete($lokasi->id);
 
         return $this->respondWithSuccessOrRedirect($request, 'lokasi.index', 'Lokasi berhasil dihapus!');
     }

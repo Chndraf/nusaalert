@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +47,12 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  */
 class AuthApiController extends Controller
 {
+    protected UserRepositoryInterface $userRepository;
+
+    public function __construct(UserRepositoryInterface $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
     /**
      * @OA\Post(
      *     path="/api/v1/auth/register",
@@ -91,7 +98,8 @@ class AuthApiController extends Controller
 
         $apiKey = Str::random(64);
 
-        $user = User::create([
+        /** @var User $user */
+        $user = $this->userRepository->create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),

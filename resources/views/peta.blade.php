@@ -36,7 +36,7 @@
         <div class="relative w-full">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
             <input type="text" id="mapSearchInputMobile"
-                   class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border-b-2 border-outline-variant font-sans text-base focus:outline-none focus:border-primary transition-colors bg-transparent rounded-none"
+                   class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border-b-2 border-outline-variant font-sans text-base focus:outline-none focus:border-primary transition-colors rounded-none"
                    placeholder="Cari lokasi...">
         </div>
     </div>
@@ -85,9 +85,9 @@
         </div>
 
         <!-- Active Alerts Panel -->
-        <div class="absolute bottom-0 w-full md:w-96 md:right-4 md:top-4 md:bottom-6 md:h-auto z-20 flex flex-col pointer-events-none">
-            <div class="bg-surface/95 backdrop-blur-xl border border-outline-variant shadow-lg md:rounded-2xl rounded-t-2xl flex-1 flex flex-col overflow-hidden pointer-events-auto max-h-[40vh] md:max-h-full">
-                <!-- Panel Header -->
+        <div class="absolute bottom-0 w-full md:w-96 md:right-4 md:bottom-6 z-20 flex flex-col pointer-events-none">
+            <div class="bg-surface/95 backdrop-blur-xl border border-outline-variant shadow-lg md:rounded-2xl rounded-t-2xl flex flex-col overflow-hidden pointer-events-auto">
+                
                 <div class="p-4 border-b border-outline-variant bg-surface-container flex justify-between items-center">
                     <div>
                         <h2 class="font-display font-bold text-lg text-on-surface flex items-center gap-2">
@@ -96,15 +96,14 @@
                         </h2>
                         <p class="font-sans text-sm text-on-surface-variant" id="alertCountLabel">{{ count($bencanaAktif) }} Kejadian Terkini</p>
                     </div>
-                    <button class="md:hidden text-on-surface-variant p-2" onclick="this.closest('.pointer-events-auto').classList.toggle('max-h-[40vh]')">
+                    <button class="md:hidden text-on-surface-variant p-2" onclick="document.getElementById('alertListPanel').classList.toggle('hidden')">
                         <span class="material-symbols-outlined">expand_less</span>
                     </button>
                 </div>
 
-                <!-- Alert List -->
-                <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3" id="alertListPanel">
+                <div class="overflow-y-auto p-4 flex flex-col gap-3 max-h-[40vh] md:max-h-[calc(100vh-200px)]" id="alertListPanel">
                     @forelse($bencanaAktif as $bencana)
-                        <div class="bg-surface border border-outline-variant rounded-xl overflow-hidden relative shadow-sm group hover:border-primary transition-colors cursor-pointer bencana-card"
+                        <div class="bg-surface border border-outline-variant rounded-xl overflow-hidden relative shadow-sm group hover:border-primary transition-colors cursor-pointer bencana-card shrink-0"
                              data-jenis="{{ $bencana->jenis_bencana }}"
                              data-lat="{{ $bencana->latitude }}"
                              data-lng="{{ $bencana->longitude }}"

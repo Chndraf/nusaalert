@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lokasi;
+use App\Repositories\Contracts\LokasiRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\Auth;
  */
 class LokasiApiController extends Controller
 {
+    protected LokasiRepositoryInterface $lokasiRepository;
+
+    public function __construct(LokasiRepositoryInterface $lokasiRepository)
+    {
+        $this->lokasiRepository = $lokasiRepository;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/lokasi",
@@ -36,7 +44,7 @@ class LokasiApiController extends Controller
      */
     public function index()
     {
-        $lokasi = Auth::user()->lokasi()->orderBy('created_at', 'desc')->get();
+        $lokasi = $this->lokasiRepository->getForUser(Auth::id());
 
         return response()->json([
             'status' => 'success',
@@ -73,7 +81,7 @@ class LokasiApiController extends Controller
             'radius_km' => 'required|integer|min:1|max:500',
         ]);
 
-        $lokasi = Auth::user()->lokasi()->create($request->only([
+        $lokasi = $this->lokasiRepository->createForUser(Auth::id(), $request->only([
             'nama_lokasi', 'latitude', 'longitude', 'radius_km'
         ]));
 
@@ -138,7 +146,7 @@ class LokasiApiController extends Controller
             'is_active' => 'sometimes|boolean',
         ]);
 
-        $lokasi->update($request->only([
+        $this->lokasiRepository->update($lokasi->id, $request->only([
             'nama_lokasi', 'latitude', 'longitude', 'radius_km', 'is_active'
         ]));
 
@@ -164,12 +172,12 @@ class LokasiApiController extends Controller
     {
         abort_unless(Auth::id() === $lokasi->user_id, 403, 'Unauthorized');
 
-        $lokasi->update(['is_active' => !$lokasi->is_active]);
+        $updated = $this->lokasiRepository->toggleActive($lokasi->id);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Status lokasi diperbarui.',
-            'data' => $lokasi->fresh(),
+            'data' => $updated,
         ]);
     }
 
@@ -188,7 +196,7 @@ class LokasiApiController extends Controller
     {
         abort_unless(Auth::id() === $lokasi->user_id, 403, 'Unauthorized');
 
-        $lokasi->delete();
+        $this->lokasiRepository->delete($lokasi->id);
 
         return response()->json([
             'status' => 'success',

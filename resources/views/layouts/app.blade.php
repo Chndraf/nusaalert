@@ -66,7 +66,7 @@
     <footer class="w-full py-8 px-4 md:px-10 grid grid-cols-1 md:grid-cols-2 gap-6 bg-surface-container-highest border-t border-outline-variant mt-auto">
         <div class="flex flex-col gap-2">
             <span class="font-display text-lg font-bold text-primary">NusaAlert</span>
-            <p class="text-base text-on-surface">© {{ date('Y') }} NusaAlert. Data real-time bersumber dari BMKG & BNPB.</p>
+            <p class="text-base text-on-surface">© {{ date('Y') }} NusaAlert. Data real-time bersumber dari BMKG.</p>
         </div>
         {{-- <div class="flex flex-wrap md:justify-end gap-x-6 gap-y-2">
             <a class="font-sans font-bold text-sm text-on-surface-variant hover:text-primary transition-colors" href="{{ route('panduan-keselamatan') }}">Panduan Keselamatan</a>

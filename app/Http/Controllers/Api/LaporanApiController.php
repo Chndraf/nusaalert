@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 
 use App\Http\Controllers\Controller;
 use App\Models\Laporan;
+use App\Repositories\Contracts\LaporanRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\Auth;
  */
 class LaporanApiController extends Controller
 {
+    protected LaporanRepositoryInterface $laporanRepository;
+
+    public function __construct(LaporanRepositoryInterface $laporanRepository)
+    {
+        $this->laporanRepository = $laporanRepository;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/laporan",
@@ -38,13 +46,10 @@ class LaporanApiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Laporan::with('user')->orderBy('created_at', 'desc');
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $laporan = $query->paginate($request->integer('per_page', 20));
+        $laporan = $this->laporanRepository->getPaginated(
+            $request->only('status'),
+            $request->integer('per_page', 20)
+        );
 
         return response()->json([
             'status' => 'success',
@@ -101,7 +106,7 @@ class LaporanApiController extends Controller
             $data['foto_url'] = $request->file('foto')->store('laporan', 'public');
         }
 
-        $laporan = Laporan::create($data);
+        $laporan = $this->laporanRepository->create($data);
 
         return response()->json([
             'status' => 'success',

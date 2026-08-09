@@ -60,7 +60,7 @@
                         <li><strong>Segera evakuasi</strong> ke dataran tinggi minimal 30 meter di atas permukaan laut.</li>
                         <li>Jangan menunggu peringatan resmi — segera bergerak setelah merasakan gempa kuat.</li>
                         <li>Jauhi pantai, sungai, dan daerah rendah.</li>
-                        <li>Jangan kembali sampai ada pernyataan aman dari BMKG/BNPB.</li>
+                        <li>Jangan kembali sampai ada pernyataan aman dari BMKG.</li>
                     </ul>
                 </div>
             </div>
